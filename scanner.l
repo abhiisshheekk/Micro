@@ -1,5 +1,6 @@
 %{
     #include <iostream>
+    #include <stdio.h>
 
     extern "C" int yylex();
     // extern int yylex();
@@ -78,6 +79,19 @@ FLOAT							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
 %%
 
 int main(int argc, char** argv) {
-    while(yylex());
+    extern FILE *yyin;
+    if (argc < 2) {
+        std::cout << "usage: ./scanner <filename> \n";
+    }
+    else {
+        if (!(yyin = fopen(argv[1], "r"))) {
+            std::cout << "Error while opening the file.\n"; 
+        }
+        else {
+            yyin = fopen(argv[1], "r");
+            yyset_in(yyin);
+            yylex();
+        }
+    }
     return 0;
 }
