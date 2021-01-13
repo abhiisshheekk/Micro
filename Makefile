@@ -1,5 +1,5 @@
 compiler: lex.yy.c  
-	@g++ $< -o scanner
+	@g++ $< -o compiler
 lex.yy.c: scanner.l
 	@flex $^
 clean:
