@@ -1,5 +1,6 @@
 compiler: lex.yy.c parser.c main.c 
 	@g++ $^ -o compiler
+	@chmod +x runme.sh
 parser.c: parser.y
 	@bison -d $^ -o parser.c
 lex.yy.c: scanner.l
