@@ -1,13 +1,12 @@
 %{
-    #include <iostream>
+    // #include <iostream>
     #include <stdio.h>
+    #include "parser.h"
 
-    extern "C" int yylex();
+    int yylex();
+    // void yyerror(char const *err);
     // extern int yylex();
 %}
-
-%option noyywrap
-
 
 DIGIT               [0-9]
 IDENTIFIER          [a-zA-Z][a-zA-Z0-9]*
@@ -30,68 +29,59 @@ COMMA               ","
 
 %%
 
-PROGRAM							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-BEGIN							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-END								{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-FUNCTION						{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-READ							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-WRITE							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-IF								{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-ELSE							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-FI							    { std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-FOR							    { std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-ROF						        { std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-RETURN							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-INT								{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-VOID							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-STRING							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
-FLOAT							{ std::cout << "Token Type: KEYWORD\nValue: " << yytext << "\n"; }
+PROGRAM							{ return _PROGRAM; }
+BEGIN							{ return _BEGIN; }
+END								{ return _END; }
+FUNCTION						{ return _FUNCTION; }
+READ							{ return _READ; }
+WRITE							{ return _WRITE; }
+IF								{ return _IF; }
+ELSE							{ return _ELSE; }
+FI							    { return _FI; }
+FOR							    { return _FOR; }
+ROF						        { return _ROF; }
+RETURN							{ return _RETURN; }
+INT								{ return _INT; }
+VOID							{ return _VOID; }
+STRING							{ return _STRING; }
+FLOAT							{ return _FLOAT; }
 
 {COMMENT}                       {}
 
-{ASSIGN_OP}                     { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{ADD_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{SUB_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{MUL_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{DIV_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{EQ_OP}                         { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{NEQ_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{LT_OP}                         { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{LTE_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{GT_OP}                         { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{GTE_OP}                        { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{OPEN_PAR}                      { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{CLOSED_PAR}                    { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{SEMICOLON}                     { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
-{COMMA}                         { std::cout << "Token Type: OPERATOR\nValue: " << yytext << "\n"; }
+{ASSIGN_OP}                     { return ASSIGN_OP; }
+{ADD_OP}                        { return ADD_OP; }
+{SUB_OP}                        { return SUB_OP; }
+{MUL_OP}                        { return MUL_OP; }
+{DIV_OP}                        { return DIV_OP; }
+{EQ_OP}                         { return EQ_OP; }
+{NEQ_OP}                        { return NEQ_OP; }
+{LT_OP}                         { return LT_OP; }
+{LTE_OP}                        { return LTE_OP; }
+{GT_OP}                         { return GT_OP; }
+{GTE_OP}                        { return GTE_OP; }
+{OPEN_PAR}                      { return OPEN_PAR; }
+{CLOSED_PAR}                    { return CLOSED_PAR; }
+{SEMICOLON}                     { return SEMICOLON; }
+{COMMA}                         { return COMMA; }
 
 
-{DIGIT}+                        { std::cout << "Token Type: INTLITERAL\nValue: " << yytext << "\n"; }
+{DIGIT}+                        { 
+                                  return INTLITERAL; }
 
-\"[^"]*\"                       { std::cout << "Token Type: STRINGLITERAL\nValue: " << yytext << "\n"; }
+\"[^"]*\"                       { 
+                                  return STRINGLITERAL; }
 
-{IDENTIFIER}                    { std::cout << "Token Type: IDENTIFIER\nValue: " << yytext << "\n"; }
+{IDENTIFIER}                    {  
+                                  return IDENTIFIER; }
 
-{DIGIT}*\.{DIGIT}+              { std::cout << "Token Type: FLOATLITERAL\nValue: " << yytext << "\n"; }
+{DIGIT}*\.{DIGIT}+              { 
+                                  return FLOATLITERAL; }
 
 [ \t\n]                         {}
 
 %%
 
-int main(int argc, char** argv) {
-    extern FILE *yyin;
-    if (argc < 2) {
-        std::cout << "usage: ./scanner <filename> \n";
-    }
-    else {
-        if (!(yyin = fopen(argv[1], "r"))) {
-            std::cout << "Error while opening the file.\n"; 
-        }
-        else {
-            yyin = fopen(argv[1], "r");
-            yyset_in(yyin);
-            yylex();
-        }
-    }
-    return 0;
+int yywrap()
+{
+  	return 1;
 }
