@@ -1,5 +1,5 @@
 compiler: lex.yy.c parser.c main.cpp 
-	@g++ $^ -o compiler
+	@g++ -std=c++11 $^ -o compiler
 	@chmod +x runme.sh
 parser.c: parser.y
 	@bison -d $^ -o parser.c
