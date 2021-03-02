@@ -1,9 +1,13 @@
 %{
-    // #include <iostream>
-    #include <stdio.h>
+    /*
+        Acknowledgement(s): (Akshat Karani)
+    */
+   
+    #include <string>
+    #include <vector>
     #include "parser.h"
 
-    int yylex();
+    extern "C" int yylex();
     // void yyerror(char const *err);
     // extern int yylex();
 %}
@@ -65,16 +69,16 @@ FLOAT							{ return _FLOAT; }
 {COMMA}                         { return COMMA; }
 
 
-{DIGIT}+                        { 
+{DIGIT}+                        { yylval.intval = atoi(yytext);
                                   return INTLITERAL; }
 
-\"[^"]*\"                       { 
+\"[^"]*\"                       { yylval.stringval = new std::string (yytext);
                                   return STRINGLITERAL; }
 
-{IDENTIFIER}                    {  
+{IDENTIFIER}                    { yylval.stringval = new std::string (yytext);
                                   return IDENTIFIER; }
 
-{DIGIT}*\.{DIGIT}+              { 
+{DIGIT}*\.{DIGIT}+              { yylval.floatval = atof(yytext);
                                   return FLOATLITERAL; }
 
 [ \t\n]                         {}
