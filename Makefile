@@ -1,4 +1,4 @@
-compiler: lex.yy.c parser.c main.c 
+compiler: lex.yy.c parser.c main.cpp 
 	@g++ $^ -o compiler
 	@chmod +x runme.sh
 parser.c: parser.y
