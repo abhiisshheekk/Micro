@@ -1,11 +1,18 @@
-#include <stdio.h>
+#include <iostream>
 #include <string>
 #include <vector>
-#include "parser.h"
+#include "headers/ast.hpp"
+#include "headers/codeObject.hpp"
+#include "headers/assemblyCode.hpp"
 #include "headers/symbolTableStack.hpp"
+#include "parser.h"
+#include <stdio.h>
 
 
 extern SymbolTableStack *tableStack;
+extern AssemblyCode *assembly_code;
+extern CodeObject *threeAC;
+
 int yylex();
 int yyparse();
 void yyerror(char const *err){
@@ -26,8 +33,13 @@ int main(int argc, char* argv[]) {
             yyin = fopen(argv[1], "r");
             // yyset_in(yyin);
 			retval = yyparse();
-            tableStack->printStack();
+            // tableStack->printStack();
             fclose(yyin);
+
+            // threeAC->print();
+            assembly_code->generateCode(threeAC, tableStack);
+            assembly_code->print();
+            std::cout << "sys halt" << std::endl;
             // yylex();
         }
     }

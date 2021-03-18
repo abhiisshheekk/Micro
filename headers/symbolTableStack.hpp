@@ -60,6 +60,33 @@ public:
             table->addEntry(name, type, value);
     }
 
+    void insertSymbol(std::string name, std::string type, bool isParameter)
+    {
+        SymbolTable *table = table_stack.top();
+        
+        if (table->ifExists(name) && error_variable == "")
+            error_variable = name;
+        else
+            table->addEntry(name, type, isParameter);
+    }
+
+    Entry* findEntry(std::string name)
+    {
+        std::stack<SymbolTable *> temp_stack = table_stack;
+        while (temp_stack.size())
+        {
+            if (temp_stack.top()->ifExists(name))
+                return temp_stack.top()->findEntry(name);
+            temp_stack.pop();
+        }
+        return new Entry("error", "error");
+    }
+
+    std::string findType(std::string name)
+    {
+        return findEntry(name)->type;
+    }
+
     void printStack()
     {
         if (error_variable != "")

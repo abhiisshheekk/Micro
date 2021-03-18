@@ -3,11 +3,17 @@
         Acknowledgement(s): (Akshat Karani)
     */
    
+    #include <iostream>
     #include <string>
     #include <vector>
+    #include "headers/ast.hpp"
+    #include "headers/codeObject.hpp"
+    #include "headers/assemblyCode.hpp"
+    #include "headers/symbolTableStack.hpp"
     #include "parser.h"
 
-    extern "C" int yylex();
+    int yylex();
+    void yyerror(char const *s);
     // void yyerror(char const *err);
     // extern int yylex();
 %}
