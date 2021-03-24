@@ -94,7 +94,14 @@ public:
 						std::string tem_arg3 = isTemporary(code_line->arg3) ? getRegister(code_line->arg3) : code_line->arg3;
 						for (auto i:ops) {
 							if (i == command) {
-								assembly.push_back(new CodeLine(code_line->scope, "cmpi", tem_arg1, tem_arg2));
+								if (i[0] != '$') {
+									std::string new_reg = getNewRegister();
+									temp_to_reg[tem_arg2] = new_reg;
+									assembly.push_back(new CodeLine(code_line->scope, "move", tem_arg2, new_reg));
+									assembly.push_back(new CodeLine(code_line->scope, "cmpi", tem_arg1, new_reg));
+								}
+								else 
+									assembly.push_back(new CodeLine(code_line->scope, "cmpi", tem_arg1, tem_arg2));
 								assembly.push_back(new CodeLine(code_line->scope, "j"+toLower(command), tem_arg3));
 								found = true;
 								break;

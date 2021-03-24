@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             // tableStack->printStack();
             fclose(yyin);
 
-            // threeAC->print();
+            //threeAC->print();
             assembly_code->generateCode(threeAC, tableStack);
             assembly_code->print();
             std::cout << "sys halt" << std::endl;

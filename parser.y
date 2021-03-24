@@ -252,8 +252,20 @@ init_stmt:			assign_expr |
 					;
 incr_stmt:			assign_expr |
 					;
-for_stmt:			_FOR { tableStack->addNewTable(); } OPEN_PAR init_stmt SEMICOLON cond SEMICOLON incr_stmt CLOSED_PAR decl stmt_list _ROF { tableStack->removeTable(); }
-					;
+for_stmt:			_FOR { tableStack->addNewTable(); } OPEN_PAR init_stmt SEMICOLON {
+                        threeAC->lb += 1;
+                        threeAC->lbList.push_front(threeAC->lb);
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "LABEL", "LABEL"+std::to_string(threeAC->lb)));
+                    } cond SEMICOLON incr_stmt CLOSED_PAR decl stmt_list _ROF{
+                        int x = threeAC->lbList.front();
+                        threeAC->lbList.pop_front();
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "JUMP", "LABEL"+std::to_string(x)));
+
+                        x = threeAC->lbList.back();
+                        threeAC->lbList.pop_back();
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "LABEL", "LABEL"+std::to_string(x)));
+                        tableStack->removeTable();
+                    };
 
 %%
 

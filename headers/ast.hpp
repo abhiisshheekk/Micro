@@ -164,7 +164,7 @@ public:
         std::string arg2 = this->right->generateCode(code);
 
         code->lb += 1;
-        code->lbList.emplace_back(code->lb);
+        code->lbList.push_back(code->lb);
         label = "LABEL" + std::to_string(code->lb);
 
         if (comp_op == ">") {
