@@ -20,7 +20,7 @@ public:
     // add new table for IF, ELSE and FOR
     void addNewTable()
     {
-        SymbolTable *temp = new SymbolTable("BLOCK " + std::to_string(block_number));
+        SymbolTable *temp = new SymbolTable("$BLOCK " + std::to_string(block_number));
         table_stack.push(temp);
         tables.push_back(temp);
         block_number += 1;
@@ -78,6 +78,14 @@ public:
             if (temp_stack.top()->ifExists(name))
                 return temp_stack.top()->findEntry(name);
             temp_stack.pop();
+        }
+        return new Entry("error", "error");
+    }
+
+    Entry* findEntry(std::string name, std::string scope) {
+        for(auto table : tables) {
+            if(table->scope == scope)
+                return table->findEntry(name);
         }
         return new Entry("error", "error");
     }

@@ -11,6 +11,8 @@ dev:
 	@echo 'Abhishek Raj'
 	@echo '180010002@iitdh.ac.in'
 tag:
-	git tag -a -f pa4submission -m "submission for PA4"
+	git tag -a -f pa5submission -m "submission for PA5"
 push:
-	git push --tags
+	git push --tags -f
+tiny:
+	g++ tinyNew.C -o tiny

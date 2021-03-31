@@ -9,7 +9,6 @@
 #include <stdio.h>
 
 
-extern SymbolTableStack *tableStack;
 extern AssemblyCode *assembly_code;
 extern CodeObject *threeAC;
 
@@ -37,7 +36,14 @@ int main(int argc, char* argv[]) {
             fclose(yyin);
 
             //threeAC->print();
-            assembly_code->generateCode(threeAC, tableStack);
+            std::cout << "push" << std::endl;
+            std::cout << "push r0" << std::endl;
+            std::cout << "push r1" << std::endl;
+            std::cout << "push r2" << std::endl;
+            std::cout << "push r3" << std::endl;
+            std::cout << "jsr main" << std::endl;
+            std::cout << "sys halt" << std::endl;
+            assembly_code->generateCode(threeAC, threeAC->symbolTableStack->tables);
             assembly_code->print();
             std::cout << "end" << std::endl;
             // yylex();

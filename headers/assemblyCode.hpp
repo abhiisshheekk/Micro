@@ -8,212 +8,241 @@
 #include <bits/stdc++.h>
 #include "codeObject.hpp"
 #include "symbolTable.hpp"
+#include "ast.hpp"
 
 class AssemblyCode
 {
-    std::vector<CodeLine *> assembly;
-    int register_no = -1;
-    std::unordered_map<std::string, std::string> temp_to_reg;
-public:
-    
-    std::string getRegister(std::string temporary)
-    {   
-        if (tempExists(temporary))
-            return temp_to_reg.find(temporary)->second;
-        else
-        {
-            std::string reg = "r" + std::to_string(++register_no);
-            this->temp_to_reg[temporary] = reg;
-            return reg;
+	public:
+        int reg = 0;
+        std::map<std::string, std::string> tempToReg;
+        std::vector<CodeLine> assembly;
+
+        std::string getNewReg() {
+            reg ++;
+            return "r" + std::to_string(reg);
         }
-    }
 
-    std::string getNewRegister()
-    {
-        return "r" + std::to_string(++register_no);
-    }
-
-    bool isTemporary(std::string temp)
-    {
-        return (temp[0] == '$');
-    }
-
-    bool tempExists(std::string temp)
-    {
-        return (temp_to_reg.find(temp) != temp_to_reg.end());
-    }
-
-	std::string toLower(std::string s) {
-		for (char& i : s) {
-			i |= ' ';
-		}
-		if (s.back() == 'f') {
-			s.back() = 'r';
-		}
-		return s;
-	}
-
-    void generateCode(CodeObject *code, SymbolTableStack *tableStack)
-    {
-    	
-        std::vector<CodeLine *> threeAC = code->threeAC;
-		for (auto table : tableStack->tables)
-        {
-			if(table->scope != "GLOBAL" && table->scope.compare(0, 5, "BLOCK"))
-        	{
-        		assembly.push_back(new CodeLine("GLOBAL", "label", table->scope));
-        		assembly.push_back(new CodeLine("GLOBAL","link", std::to_string(table->linkSize())));
-        	}
-
-            for (auto entry : table->ordered_symbols)
-            {
-                if (entry->type == "STRING")
-                    assembly.push_back(new CodeLine(table->scope, "str", entry->name, entry->value));
+        std::string getWhatever(std::string temp) {
+            if(temp[0] == '#') {
+                temp[0] = '$';
+                return temp;
             }
-            if(table->scope == "GLOBAL")
-        	{
-        		assembly.push_back(new CodeLine("GLOBAL", "push",""));
-        		assembly.push_back(new CodeLine("GLOBAL", "jsr", "main"));
-        		assembly.push_back(new CodeLine("GLOBAL", "sys", "halt"));
-        	}
+            if(temp[0] != '$')
+                return temp;
+            if(tempToReg.find(temp) != tempToReg.end())
+                return tempToReg[temp];
+            tempToReg[temp] = getNewReg();
+            return tempToReg[temp];
+        }
 
-	        for (auto code_line : threeAC)
-	        {
-	            std::string command = code_line->command;
-				if(code_line->scope == table->scope)
-	            {
-	            	std::string new_arg1 = code_line->arg1;
-	            	std::string new_arg2 = code_line->arg2;
+        std::string getRegForID(std::string ID) {
+            tempToReg[ID] = getNewReg();
+            return tempToReg[ID];
+        }
 
-		            if (command == "READI") {
-		                assembly.push_back(new CodeLine(code_line->scope, "sys", "readi", new_arg1));
-		            }
-		            else if (command == "READF") {
-		                assembly.push_back(new CodeLine(code_line->scope, "sys", "readr", new_arg1));
-		            }
-		            else if (command == "WRITEI") {
-		                assembly.push_back(new CodeLine(code_line->scope, "sys", "writei", new_arg1));
-		            }
-		            else if (command == "WRITEF") {
-		                assembly.push_back(new CodeLine(code_line->scope, "sys", "writer", new_arg1));
-		            }
-		            else if (command == "WRITES") {
-		                assembly.push_back(new CodeLine(code_line->scope, "sys", "writes", new_arg1));
-		            }
-		            else if (command == "STOREI" || command == "STOREF") {
-		                new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
-		                new_arg2 = isTemporary(code_line->arg2) ? getRegister(code_line->arg2) : new_arg2;
-		                assembly.push_back(new CodeLine(code_line->scope, "move", new_arg1, new_arg2));
-		            }
-					else if (command == "RET")
-		            {
-		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
-		            	std::string arg1 = getNewRegister();
-		            	assembly.push_back(new CodeLine(code_line->scope, "move", new_arg1, arg1));
-		            	std::string retstack = "$" + std::to_string(table->total_parameters + 2);
-		            	assembly.push_back(new CodeLine(code_line->scope, "move", arg1, retstack));
+        bool isTemp(std::string temp) {
+            return temp[0] == '$';
+        }
 
-		            	if(table->scope != "GLOBAL")
-			        	{
-			        		assembly.push_back(new CodeLine(code_line->scope,"unlnk",""));
-			        	}
+        void generateCode(CodeObject *code, std::vector<SymbolTable *> STvector) {
+            auto getLower = [&](std::string s) -> std::string {
+                for(char& i : s)
+                    i |= ' ';
+                if(s.back() == 'f')
+                    s.back() = 'r';
+                return s;
+            };
 
-		            	assembly.push_back(new CodeLine(code_line->scope, "ret", ""));
-		            }
-		            else if (command == "PUSH")
-		            {
-		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
-		            	assembly.push_back(new CodeLine(code_line->scope, "push", new_arg1));
-		            }
-		            else if (command == "JSR")
-		            {
-		            	assembly.push_back(new CodeLine(code_line->scope, "jsr", new_arg1));
-		            }
-		            else if (command == "POP")
-		            {
-		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
-		            	assembly.push_back(new CodeLine(code_line->scope, "pop", new_arg1));
-		            }
-		            else {   
-						std::string ops[] = {"GE", "GT", "LT", "LE", "NE", "EQ"};
-						bool found = false;
-						std::string tem_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : code_line->arg1;
-						std::string tem_arg2 = isTemporary(code_line->arg2) ? getRegister(code_line->arg2) : code_line->arg2;
-						std::string tem_arg3 = isTemporary(code_line->arg3) ? getRegister(code_line->arg3) : code_line->arg3;
-						for (auto i:ops) {
-							if (i == command) {
-								if (i[0] != '$') {
-									std::string new_reg = getNewRegister();
-									temp_to_reg[tem_arg2] = new_reg;
-									assembly.push_back(new CodeLine(code_line->scope, "move", tem_arg2, new_reg));
-									assembly.push_back(new CodeLine(code_line->scope, "cmpi", tem_arg1, new_reg));
-								}
-								else 
-									assembly.push_back(new CodeLine(code_line->scope, "cmpi", tem_arg1, tem_arg2));
-								assembly.push_back(new CodeLine(code_line->scope, "j"+toLower(command), tem_arg3));
-								found = true;
+			for(CodeLine* line : code->threeAC) {
+				std::string com = line->command;
+
+				std::string farg1, farg2, farg3;
+
+				auto frameVar = [&](std::string s, std::string scope) -> std::string {
+					if(s[0] != '$') {
+						bool got = 0;
+						for(int i=STvector.size()-1;i>=0;--i) {
+							if(STvector[i]->scope == scope)
+								got = 1;
+							if(got == 1 && STvector[i]->scope[0] != '$') {
+								scope = STvector[i]->scope;
 								break;
 							}
 						}
 
-						if (command == "JUMP") {
-							assembly.push_back(new CodeLine(code_line->scope, "jmp", code_line->arg1));
-							found = true;
+						SymbolTable* curtable;
+						for(SymbolTable* table : STvector) {
+							if(table->scope == scope) {
+								curtable = table;
+								break;
+							}
 						}
-						else if (command == "LABEL") {
-							assembly.push_back(new CodeLine(code_line->scope, "label", code_line->arg1));
-							found = true;
+
+						int no_parameters = 0;
+
+						for(int i=0;i<(int)curtable->ordered_symbols.size();++i) {
+							if(curtable->ordered_symbols[i]->isParameter == true)
+								no_parameters ++;
 						}
 
-						if (found)
-							continue;
+						for(int i=0;i<(int)curtable->ordered_symbols.size();++i) {
+							if(curtable->ordered_symbols[i]->name == s) {
+								if(curtable->ordered_symbols[i]->isParameter == true)
+									return "#" + std::to_string(5 + i + 1);
+								return "#-" + std::to_string(i + 1 - no_parameters);
+							}
+						}
+					}
+					return s;
+				};
 
-						std::string command;
-		                new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
-		                std::string arg2 = getNewRegister();
-		                assembly.push_back(new CodeLine(code_line->scope, "move", new_arg1, arg2));
+				farg1 = frameVar(line->arg1, line->scope);
+				farg2 = frameVar(line->arg2, line->scope);
+				farg3 = frameVar(line->arg3, line->scope);
 
-		                if (code_line->command == "ADDI")
-		                    command = "addi";
-		                else if (code_line->command == "SUBI")
-		                    command = "subi";
-		                else if (code_line->command == "MULTI")
-		                    command = "muli";
-		                else if (code_line->command == "DIVI")
-		                    command = "divi";
-		                else if (code_line->command == "ADDF")
-		                    command = "addr";
-		                else if (code_line->command == "SUBF")
-		                    command = "subr";
-		                else if (code_line->command == "MULTF")
-		                    command = "mulr";
-		                else if (code_line->command == "DIVF")
-		                    command = "divr";
 
-		                new_arg1 = isTemporary(code_line->arg2) ? getRegister(code_line->arg2) : new_arg2;
-		                assembly.push_back(new CodeLine(code_line->scope, command, new_arg1, arg2));
-		                if (isTemporary(code_line->arg3))
-		                    temp_to_reg[code_line->arg3] = arg2;
+				std::string flag = "$";
+				int no_parameters = 0;
 
-		            }
-		        }
-	        }
-	        
-	    }
-    }
+				bool got = 0;
+				std::string scope = line->scope;
+				for(int i=STvector.size()-1;i>=0;--i) {
+					if(STvector[i]->scope == scope)
+						got = 1;
+					if(got == 1 && STvector[i]->scope[0] != '$') {
+						scope = STvector[i]->scope;
+						break;
+					}
+				}
 
-    void printMap()
-    {
-        for (auto it: temp_to_reg)
-            std::cout << it.first << " " << it.second << std::endl;
-        std::cout << "PRINTED" << std::endl;
-    }
+				SymbolTable* curtable;
+				for(SymbolTable* table : STvector) {
+					if(table->scope == scope) {
+						curtable = table;
+						break;
+					}
+				}
+				for(int i=0;i<(int)curtable->ordered_symbols.size();++i) {
+					if(curtable->ordered_symbols[i]->isParameter == true)
+						no_parameters ++;
+				}
 
-    void print()
-    {
-        for (auto c: assembly)
-            c->print();
-    }
+				flag += std::to_string(6 + no_parameters);
+				if(com == "RET") {
+					if(farg1[0] == '$') {
+
+						assembly.push_back(CodeLine(line->scope, "move", getWhatever(farg1), flag));
+						assembly.push_back(CodeLine(line->scope, "unlnk", ""));
+						assembly.push_back(CodeLine(line->scope, "ret", ""));
+					} else {
+						std::string newR = getNewReg();
+						tempToReg[farg1] = newR;
+						assembly.push_back(CodeLine(line->scope, "move", getWhatever(farg1), newR));
+						assembly.push_back(CodeLine(line->scope, "move", newR, flag));
+						assembly.push_back(CodeLine(line->scope, "unlnk", ""));
+						assembly.push_back(CodeLine(line->scope, "ret", ""));
+					}
+				}
+				if(com == "PUSH") {
+					if(line->arg1 != "") {
+						assembly.push_back(CodeLine(line->scope, "push", getWhatever(farg1)));
+					}
+					else {
+						//return value push
+						assembly.push_back(CodeLine(line->scope, "push", ""));
+
+					}
+				}
+				if(com == "PUSHR") {
+					assembly.push_back(CodeLine(line->scope, "push", "r0"));
+					assembly.push_back(CodeLine(line->scope, "push", "r1"));
+					assembly.push_back(CodeLine(line->scope, "push", "r2"));
+					assembly.push_back(CodeLine(line->scope, "push", "r3"));
+				}
+				if(com == "LINK") {
+					int cnt = 5;
+					assembly.push_back(CodeLine(line->scope, "link", std::to_string(cnt)));
+				}
+				if(com == "JSR") {
+					assembly.push_back(CodeLine(line->scope, "jsr", line->arg1));
+				}
+				if(com == "POP") {
+					if(line->arg1 == "") {
+
+						assembly.push_back(CodeLine(line->scope, "pop", ""));
+					}
+					else 
+						assembly.push_back(CodeLine(line->scope, "pop", getWhatever(farg1)));
+				}
+				if(com == "POPR") {
+					assembly.push_back(CodeLine(line->scope, "pop", "r3"));
+					assembly.push_back(CodeLine(line->scope, "pop", "r2"));
+					assembly.push_back(CodeLine(line->scope, "pop", "r1"));
+					assembly.push_back(CodeLine(line->scope, "pop", "r0"));
+				}
+				if(com == "STOREI" || com == "STOREF") {
+					assembly.push_back(CodeLine(line->scope, "move", getWhatever(farg1), getWhatever(farg2)));
+				
+				} else if(com == "WRITEI" || com == "WRITEF" || com == "WRITES") {
+					assembly.push_back(CodeLine(line->scope, "sys", getLower(com), getWhatever(farg1)));
+				
+				} else if(com == "READI" || com == "READF") {
+					assembly.push_back(CodeLine(line->scope, "sys", getLower(com), getWhatever(farg1)));
+				
+				} else {
+					const std::string Ids[] = { "ADD", "SUB", "DIV", "MUL"};
+					const std::string cmps[] = { "GE", "GT", "LT", "LE", "NE", "EQ"};
+					bool presentinId = false;
+					for(std::string i : Ids) {
+						if(i == com.substr(0, 3)) {
+							assembly.push_back(CodeLine(line->scope, "move", getWhatever(farg1), getWhatever(farg3)));
+						
+							assembly.push_back(CodeLine(line->scope, getLower(com), getWhatever(farg2), getWhatever(farg3)));
+						
+							presentinId = true;
+							break;
+						}
+					}
+
+					// handle jump statements
+					for(std::string i : cmps) {
+						if(i == com) {
+							// TODO :// generate correct comp<i/r>
+							if(line->arg2[0] != '$') {
+								// no temporary
+								std::string temp = getRegForID(line->arg2);
+								assembly.push_back(CodeLine(line->scope, "move", getWhatever(farg2), temp));
+								assembly.push_back(CodeLine(line->scope, "cmpi", getWhatever(farg1), temp));
+							}
+							else {
+								assembly.push_back(CodeLine(line->scope, "cmpi", getWhatever(farg1), getWhatever(farg2)));
+							}
+						
+							assembly.push_back(CodeLine(line->scope, "j" + getLower(com), getWhatever(farg3)));
+						
+							presentinId = true;
+							break;
+						}
+					}
+
+					if(com == "JUMP") {
+						assembly.push_back(CodeLine(line->scope, "jmp", line->arg1));
+						presentinId = true;
+					} else if(com == "LABEL") {
+						assembly.push_back(CodeLine(line->scope, "label", line->arg1));
+						presentinId = true;
+					}
+
+				}
+
+			}
+        }
+
+		void print()
+		{
+			for (auto c: assembly)
+				c.print();
+		}
 
 };
 

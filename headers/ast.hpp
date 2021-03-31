@@ -47,7 +47,7 @@ public:
             else if (optype == '-')
                 command += "SUBI";
             else if (optype == '*')
-                command += "MULTI";
+                command += "MULI";
             else if (optype == '/')
                 command += "DIVI";
         }
@@ -58,7 +58,7 @@ public:
             else if (optype == '-')
                 command += "SUBF";
             else if (optype == '*')
-                command += "MULTF";
+                command += "MULF";
             else if (optype == '/')
                 command += "DIVF";
         }
@@ -150,60 +150,44 @@ public:
     }
 };
 
-class ASTNode_Return : public ASTNode
-{
-public:
-    std::string type = "RETURN";
-
-    //ASTNode_Return();
-
-    std::string generateCode(CodeObject *code)
-    {
-        std::string command = "RET";
-        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope,
-                                             command, 
-                                             this->right->generateCode(code)));
-    }
-};
-
 class ASTNode_CallExpr : public ASTNode
 {
 public:
-    std::string type = "CALL";
-    std::string func_name;
-    std::vector<ASTNode*>* exprlist;
+    std::string type = "CALLEXPR";
+    std::string funct_name = "";
+    std::vector<ASTNode*>* parameter_list;
 
-    ASTNode_CallExpr(std::string func_name, std::vector<ASTNode*>* exprlist)
+    ASTNode_CallExpr(std::string func_name, std::vector<ASTNode*>* plist)
     {
-        this->func_name = func_name;
-        this->exprlist = exprlist;
+        this->funct_name = func_name;
+        this->parameter_list = plist;
     }
 
 
     std::string generateCode(CodeObject *code)
     {
-        std::string command = "PUSH";
-        //Push Register here. Not needed as of now
-        //Pushing return 
-        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "PUSH", ""));
-        //Pushing arguments. Iterating vector in forward direction iterates parameters in reverse direction. So no issues as the parameters are given names in forward directio 
-        for(auto &it : *exprlist)
-        {
-            std::string topush = (it)->generateCode(code);
-            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "PUSH", topush));
-        }
-        //Calling function
-        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "JSR", func_name));
-        //Popping arguments. Don't Forget to reverse the order from pushing in case of . For now the order is same
-        for(auto &it : *exprlist)
-        {
-            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", ""));
-        }
-        //Popping return into register
-        std::string temp = code->getTemp();
-        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", temp));
-        return temp;
 
+        std::string comm = "PUSH";
+
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, comm, ""));
+
+        for(auto& node : *parameter_list) {
+            std::string para = node->generateCode(code);
+            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, comm, para));
+        }
+
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, comm + "R", ""));
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "JSR", funct_name));
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POPR", ""));
+
+        for(int i=0;i<(int)(*parameter_list).size();++i)
+            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", ""));
+
+        std::string temp = code->getTemp();
+
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", temp)); 
+        
+        return temp;
     }
 };
 

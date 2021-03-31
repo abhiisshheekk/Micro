@@ -71,7 +71,7 @@
 %type <intval> var_type
 %type <stringval> str id
 %type <stringlist> id_list id_tail
-%type <astnode> mulop addop primary postfix_expr factor_prefix factor expr_prefix expr return_stmt call_expr compop
+%type <astnode> mulop addop primary postfix_expr factor_prefix factor expr_prefix expr return_stmt call_expr compop for_assign_expr incr_stmt
 %type <astlist> expr_list expr_list_tail
 
 %%
@@ -127,7 +127,11 @@ param_decl_tail:	COMMA param_decl param_decl_tail |
 					;
 func_declarations:	func_decl func_declarations |
 					;
-func_decl:			_FUNCTION any_type id { tableStack->addNewTable(*($3)); } OPEN_PAR param_decl_list CLOSED_PAR _BEGIN func_body _END { tableStack->removeTable(); }
+func_decl:			_FUNCTION any_type id { 
+                        tableStack->addNewTable(*($3)); 
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "LABEL", *($3)));
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "LINK", ""));
+                    } OPEN_PAR param_decl_list CLOSED_PAR _BEGIN func_body _END { tableStack->removeTable(); }
 					;
 func_body:			decl stmt_list 
 					;
@@ -161,9 +165,8 @@ write_stmt:			_WRITE OPEN_PAR id_list CLOSED_PAR SEMICOLON {
                         }
                     };
 return_stmt:		_RETURN expr SEMICOLON {
-                        ASTNode *retnode = new ASTNode_Return();
-						retnode->right = $2;
-						retnode->generateCode(threeAC);
+                        std::string a = ($2)->generateCode(threeAC);
+                        threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "RET", a));
                     };
 expr:				expr_prefix factor {
                         if ($1 == nullptr)
@@ -254,13 +257,20 @@ compop:				LT_OP { $$ = new ASTNode_Cond("<"); } | GT_OP { $$ = new ASTNode_Cond
 					;
 init_stmt:			assign_expr |
 					;
-incr_stmt:			assign_expr |
+incr_stmt:			for_assign_expr  { $$ = $1; } | { $$ = nullptr; }
 					;
+for_assign_expr:    id ASSIGN_OP expr {
+                        ASTNode * node = new ASTNode_Assign(tableStack->findEntry(*$1));
+                        node->right = $3;
+                        $$ = node;
+                    };
 for_stmt:			_FOR { tableStack->addNewTable(); } OPEN_PAR init_stmt SEMICOLON {
                         threeAC->lb += 1;
                         threeAC->lbList.push_front(threeAC->lb);
                         threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "LABEL", "LABEL"+std::to_string(threeAC->lb)));
-                    } cond SEMICOLON incr_stmt CLOSED_PAR decl stmt_list _ROF{
+                    } cond REST; 
+REST:               SEMICOLON incr_stmt CLOSED_PAR decl stmt_list _ROF{
+                        ($2)->generateCode(threeAC);
                         int x = threeAC->lbList.front();
                         threeAC->lbList.pop_front();
                         threeAC->threeAC.push_back(new CodeLine(threeAC->symbolTableStack->table_stack.top()->scope, "JUMP", "LABEL"+std::to_string(x)));
