@@ -119,9 +119,9 @@ param_decl_list:	param_decl param_decl_tail |
 					;
 param_decl:			var_type id {
 						if ($1 == _FLOAT)
-							tableStack->insertSymbol(*$2, "FLOAT");
+							tableStack->insertSymbol(*$2, "FLOAT", true);
 						else if ($1 == _INT)
-							tableStack->insertSymbol(*$2, "INT");
+							tableStack->insertSymbol(*$2, "INT", true);
 					};
 param_decl_tail:	COMMA param_decl param_decl_tail |
 					;
@@ -161,6 +161,9 @@ write_stmt:			_WRITE OPEN_PAR id_list CLOSED_PAR SEMICOLON {
                         }
                     };
 return_stmt:		_RETURN expr SEMICOLON {
+                        ASTNode *retnode = new ASTNode_Return();
+						retnode->right = $2;
+						retnode->generateCode(threeAC);
                     };
 expr:				expr_prefix factor {
                         if ($1 == nullptr)
@@ -200,6 +203,7 @@ factor_prefix:		factor_prefix postfix_expr mulop {
                     } | { $$ = nullptr; };
 postfix_expr:		primary { $$ = $1; } | call_expr { $$ = $1; };
 call_expr:			id OPEN_PAR expr_list CLOSED_PAR {
+                        $$ = new ASTNode_CallExpr(*($1), $3);
                     };
 expr_list:			expr expr_list_tail {
                         $$ = $2;

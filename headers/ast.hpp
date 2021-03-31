@@ -150,6 +150,63 @@ public:
     }
 };
 
+class ASTNode_Return : public ASTNode
+{
+public:
+    std::string type = "RETURN";
+
+    //ASTNode_Return();
+
+    std::string generateCode(CodeObject *code)
+    {
+        std::string command = "RET";
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope,
+                                             command, 
+                                             this->right->generateCode(code)));
+    }
+};
+
+class ASTNode_CallExpr : public ASTNode
+{
+public:
+    std::string type = "CALL";
+    std::string func_name;
+    std::vector<ASTNode*>* exprlist;
+
+    ASTNode_CallExpr(std::string func_name, std::vector<ASTNode*>* exprlist)
+    {
+        this->func_name = func_name;
+        this->exprlist = exprlist;
+    }
+
+
+    std::string generateCode(CodeObject *code)
+    {
+        std::string command = "PUSH";
+        //Push Register here. Not needed as of now
+        //Pushing return 
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "PUSH", ""));
+        //Pushing arguments. Iterating vector in forward direction iterates parameters in reverse direction. So no issues as the parameters are given names in forward directio 
+        for(auto &it : *exprlist)
+        {
+            std::string topush = (it)->generateCode(code);
+            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "PUSH", topush));
+        }
+        //Calling function
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "JSR", func_name));
+        //Popping arguments. Don't Forget to reverse the order from pushing in case of . For now the order is same
+        for(auto &it : *exprlist)
+        {
+            code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", ""));
+        }
+        //Popping return into register
+        std::string temp = code->getTemp();
+        code->threeAC.push_back(new CodeLine(code->symbolTableStack->table_stack.top()->scope, "POP", temp));
+        return temp;
+
+    }
+};
+
 class ASTNode_Cond : public ASTNode 
 {
 public:

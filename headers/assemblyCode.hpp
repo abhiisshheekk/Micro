@@ -57,11 +57,30 @@ public:
     {
     	
         std::vector<CodeLine *> threeAC = code->threeAC;
-
+		for (auto table : tableStack->tables)
         {
+			if(table->scope != "GLOBAL" && table->scope.compare(0, 5, "BLOCK"))
+        	{
+        		assembly.push_back(new CodeLine("GLOBAL", "label", table->scope));
+        		assembly.push_back(new CodeLine("GLOBAL","link", std::to_string(table->linkSize())));
+        	}
+
+            for (auto entry : table->ordered_symbols)
+            {
+                if (entry->type == "STRING")
+                    assembly.push_back(new CodeLine(table->scope, "str", entry->name, entry->value));
+            }
+            if(table->scope == "GLOBAL")
+        	{
+        		assembly.push_back(new CodeLine("GLOBAL", "push",""));
+        		assembly.push_back(new CodeLine("GLOBAL", "jsr", "main"));
+        		assembly.push_back(new CodeLine("GLOBAL", "sys", "halt"));
+        	}
+
 	        for (auto code_line : threeAC)
 	        {
 	            std::string command = code_line->command;
+				if(code_line->scope == table->scope)
 	            {
 	            	std::string new_arg1 = code_line->arg1;
 	            	std::string new_arg2 = code_line->arg2;
@@ -85,6 +104,35 @@ public:
 		                new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
 		                new_arg2 = isTemporary(code_line->arg2) ? getRegister(code_line->arg2) : new_arg2;
 		                assembly.push_back(new CodeLine(code_line->scope, "move", new_arg1, new_arg2));
+		            }
+					else if (command == "RET")
+		            {
+		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
+		            	std::string arg1 = getNewRegister();
+		            	assembly.push_back(new CodeLine(code_line->scope, "move", new_arg1, arg1));
+		            	std::string retstack = "$" + std::to_string(table->total_parameters + 2);
+		            	assembly.push_back(new CodeLine(code_line->scope, "move", arg1, retstack));
+
+		            	if(table->scope != "GLOBAL")
+			        	{
+			        		assembly.push_back(new CodeLine(code_line->scope,"unlnk",""));
+			        	}
+
+		            	assembly.push_back(new CodeLine(code_line->scope, "ret", ""));
+		            }
+		            else if (command == "PUSH")
+		            {
+		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
+		            	assembly.push_back(new CodeLine(code_line->scope, "push", new_arg1));
+		            }
+		            else if (command == "JSR")
+		            {
+		            	assembly.push_back(new CodeLine(code_line->scope, "jsr", new_arg1));
+		            }
+		            else if (command == "POP")
+		            {
+		            	new_arg1 = isTemporary(code_line->arg1) ? getRegister(code_line->arg1) : new_arg1;
+		            	assembly.push_back(new CodeLine(code_line->scope, "pop", new_arg1));
 		            }
 		            else {   
 						std::string ops[] = {"GE", "GT", "LT", "LE", "NE", "EQ"};

@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
             //threeAC->print();
             assembly_code->generateCode(threeAC, tableStack);
             assembly_code->print();
-            std::cout << "sys halt" << std::endl;
+            std::cout << "end" << std::endl;
             // yylex();
         }
     }
