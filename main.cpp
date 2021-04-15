@@ -1,56 +1,86 @@
+// the main c++ file for the compiler
+// team chickendinner
 #include <iostream>
-#include <string>
-#include <vector>
-#include "headers/ast.hpp"
-#include "headers/codeObject.hpp"
-#include "headers/assemblyCode.hpp"
-#include "headers/symbolTableStack.hpp"
-#include "parser.h"
 #include <stdio.h>
+#include <vector>
+#include <map>
+#include <string>
+#include <set>
+#include <vector>
+#include "headers/main.h"
+#include "parser.hpp"
+using namespace std;
 
+// Define Global Variables
+int var_ct = 0;
+bool reg_only_flag = false;
+std::map<string, string> var_dict;
+std::map<string, string> reg_dict;
+//std::vector<std::set<string>> GEN_vect;
+//std::vector<std::set<string>> KILL_vect;
 
-extern AssemblyCode *assembly_code;
-extern CodeObject *threeAC;
+//extern int yyparse();
+extern FILE* yyin;
+//extern char* yytext;
+/*
+std::map<yytokentype, std::string> typeName;
+std::string typeName[TOKEN_INT] = "INT";
+*/
+int main(int argc, char **argv)
+{
+	//printf("%s\n", typeName[TOKEN_INT]);
+	FILE *scanfile = fopen( argv[1], "r");
+	if(!scanfile)
+	{
+		printf("Can't open the file\n");
+		return -1;
+	}
+	yyin = scanfile;
 
-int yylex();
-int yyparse();
-void yyerror(char const *err){
-    // printf("Not accepted\n");
-};
+	int check = yyparse();
 
-int main(int argc, char* argv[]) {
-	extern FILE *yyin;
-    int retval;
-    if (argc < 2) {
-        printf("usage: ./compiler <filename> \n");
-    }
-    else {
-        if (!(yyin = fopen(argv[1], "r"))) {
-            printf("Error while opening the file.\n"); 
-        }
-        else {
-            yyin = fopen(argv[1], "r");
-            // yyset_in(yyin);
-			retval = yyparse();
-            // tableStack->printStack();
-            fclose(yyin);
+	if(check == 0)
+	{
+		//printf("Accepted");
+	}
+	//print the 3 address code
+	//cout << IR_vector.size() <<endl;
+	std::set<string> tempVarSet;
+	for (int i = 0; i < IR_vector.size(); i++)
+	{
+		cout << ";";
+		cout << IR_vector[i]->get_op_type();
+		if(IR_vector[i]->get_op1() != ""){
+			cout << " op1:" << IR_vector[i]->get_op1();
+			if((IR_vector[i]->get_op1()).find('T') != std::string::npos){
+				tempVarSet.insert(IR_vector[i]->get_op1());
+			}
+		}
+		if(IR_vector[i]->get_op2() != ""){
+			cout << " op2:" << IR_vector[i]->get_op2();
+			if((IR_vector[i]->get_op2()).find('T') != std::string::npos){
+				tempVarSet.insert(IR_vector[i]->get_op2());
+			}
+		}
+		if(IR_vector[i]->get_result() != ""){
+			cout << " result:" << IR_vector[i]->get_result();
+			if((IR_vector[i]->get_result()).find('T') != std::string::npos){
+				tempVarSet.insert(IR_vector[i]->get_result());
+			}
+		}
+		cout << endl;
+	}
+		cout << endl;
+		set<string>::iterator iter;
+		for(iter=tempVarSet.begin(); iter!=tempVarSet.end();++iter) {
+			cout << "var " << *iter << endl;
+		}
+//--------------------------Pre-Tiny code generation(for optimization)-----------------------	
+		std::Tiny* optTiny = new std::Tiny(IR_vector);
+		optTiny -> genTiny();
 
-            //threeAC->print();
-            std::cout << "push" << std::endl;
-            std::cout << "push r0" << std::endl;
-            std::cout << "push r1" << std::endl;
-            std::cout << "push r2" << std::endl;
-            std::cout << "push r3" << std::endl;
-            std::cout << "jsr main" << std::endl;
-            std::cout << "sys halt" << std::endl;
-            assembly_code->generateCode(threeAC, threeAC->symbolTableStack->tables);
-            assembly_code->print();
-            std::cout << "end" << std::endl;
-            // yylex();
-        }
-    }
-    // if(retval == 0)
-	    // printf("Accepted\n");
-    
-    return 0;
+			
+		
+		
+	return 0;
 }

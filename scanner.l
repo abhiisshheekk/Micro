@@ -1,97 +1,68 @@
 %{
-    /*
-        Acknowledgement(s): (Akshat Karani)
-    */
-   
-    #include <iostream>
-    #include <string>
-    #include <vector>
-    #include "headers/ast.hpp"
-    #include "headers/codeObject.hpp"
-    #include "headers/assemblyCode.hpp"
-    #include "headers/symbolTableStack.hpp"
-    #include "parser.h"
+#include <string>
+#include <vector>
+#include "headers/main.h"
+#include "parser.hpp"
+#include <stdio.h>
+#include <iostream>
 
-    int yylex();
-    void yyerror(char const *s);
-    // void yyerror(char const *err);
-    // extern int yylex();
+using namespace std;
 %}
 
-DIGIT               [0-9]
-IDENTIFIER          [a-zA-Z][a-zA-Z0-9]*
+DIGIT	[0-9]
+LETTER	[A-Za-z]
+ID		{LETTER}({LETTER}|{DIGIT})*
 COMMENT             #.*\n
-ASSIGN_OP           ":="
-ADD_OP              "+"
-SUB_OP              "-"
-MUL_OP              "*"
-DIV_OP              "/"
-EQ_OP               "="
-NEQ_OP              "!="
-LT_OP               "<"
-LTE_OP              "<="
-GT_OP               ">"
-GTE_OP              ">="
-OPEN_PAR            "("
-CLOSED_PAR          ")"
-SEMICOLON           ";"
-COMMA               ","
+
+%option noyywrap
+%option yylineno
 
 %%
+PROGRAM	{return TOKEN_PROGRAM;}
+BEGIN	{return TOKEN_BEGIN;}
+END	{return TOKEN_END;}
+FUNCTION	{return TOKEN_FUNCTION;}
+READ	{return TOKEN_READ;}
+WRITE	{return TOKEN_WRITE;}
+IF 	{return TOKEN_IF;}
+ELSE	{return TOKEN_ELSE;}
+FI 	{return TOKEN_FI;}
+FOR	{return TOKEN_FOR;}
+ROF	{return TOKEN_ROF;}
+RETURN 	{return TOKEN_RETURN;}
+INT 	{yylval.str = new string(yytext); return TOKEN_INT;}
+VOID	{return TOKEN_VOID;}
+STRING 	{yylval.str = new string(yytext); return TOKEN_STRING;}
+FLOAT {yylval.str = new string(yytext); return TOKEN_FLOAT;}
 
-PROGRAM							{ return _PROGRAM; }
-BEGIN							{ return _BEGIN; }
-END								{ return _END; }
-FUNCTION						{ return _FUNCTION; }
-READ							{ return _READ; }
-WRITE							{ return _WRITE; }
-IF								{ return _IF; }
-ELSE							{ return _ELSE; }
-FI							    { return _FI; }
-FOR							    { return _FOR; }
-ROF						        { return _ROF; }
-RETURN							{ return _RETURN; }
-INT								{ return _INT; }
-VOID							{ return _VOID; }
-STRING							{ return _STRING; }
-FLOAT							{ return _FLOAT; }
+{ID}					{yylval.str = new string(yytext); return TOKEN_IDENTIFIER;}
 
-{COMMENT}                       {}
+{DIGIT}+				{yylval.str = new string(yytext); return TOKEN_INTLITERAL;}
 
-{ASSIGN_OP}                     { return ASSIGN_OP; }
-{ADD_OP}                        { return ADD_OP; }
-{SUB_OP}                        { return SUB_OP; }
-{MUL_OP}                        { return MUL_OP; }
-{DIV_OP}                        { return DIV_OP; }
-{EQ_OP}                         { return EQ_OP; }
-{NEQ_OP}                        { return NEQ_OP; }
-{LT_OP}                         { return LT_OP; }
-{LTE_OP}                        { return LTE_OP; }
-{GT_OP}                         { return GT_OP; }
-{GTE_OP}                        { return GTE_OP; }
-{OPEN_PAR}                      { return OPEN_PAR; }
-{CLOSED_PAR}                    { return CLOSED_PAR; }
-{SEMICOLON}                     { return SEMICOLON; }
-{COMMA}                         { return COMMA; }
+{DIGIT}*"."{DIGIT}+		{yylval.str = new string(yytext); return TOKEN_FLOATLITERAL;}
+{COMMENT}               {};
+
+":="	{return TOKEN_OP_NE;}
+"+"	{return TOKEN_OP_PLUS;}
+"-"	{return TOKEN_OP_MINS;}
+"*"	{return TOKEN_OP_STAR;}
+"/"	{return TOKEN_OP_SLASH;}
+"="	{return TOKEN_OP_EQ;}
+"!="	{return TOKEN_OP_NEQ;}
+"<"	{return TOKEN_OP_LESS;}
+">"	{return TOKEN_OP_GREATER;}
+"("	{return TOKEN_OP_LP;}
+")"	{return TOKEN_OP_RP;}
+";"	{return TOKEN_OP_SEMIC;}
+","	{return TOKEN_OP_COMMA;}
+"<="	{return TOKEN_OP_LE;}
+">=" {return TOKEN_OP_GE;}
+
+\"([^\"\n]|\"\")*\"			{yylval.str = new string(yytext); return TOKEN_STRINGLITERAL;}
+"--".*\n			{/* deleted */}
+[ \t\n\r]+			{/* deleted */}
 
 
-{DIGIT}+                        { yylval.intval = atoi(yytext);
-                                  return INTLITERAL; }
 
-\"[^"]*\"                       { yylval.stringval = new std::string (yytext);
-                                  return STRINGLITERAL; }
-
-{IDENTIFIER}                    { yylval.stringval = new std::string (yytext);
-                                  return IDENTIFIER; }
-
-{DIGIT}*\.{DIGIT}+              { yylval.floatval = atof(yytext);
-                                  return FLOATLITERAL; }
-
-[ \t\n]                         {}
 
 %%
-
-int yywrap()
-{
-  	return 1;
-}
