@@ -6,7 +6,7 @@ parser.cpp: parser.y
 lex.yy.c: scanner.l
 	@flex $^
 clean:
-	@rm -f parser.cpp lex.yy.c parser.hpp compiler out *.out
+	@rm -f parser.cpp lex.yy.c parser.hpp compiler out 
 dev: 
 	@echo 'Abhishek Raj'
 	@echo '180010002@iitdh.ac.in'
