@@ -1,3 +1,7 @@
+/*
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
+*/
+
 #include "Symbol.h"
 
 namespace std{

@@ -1,6 +1,7 @@
 /*
-	The Symbol class
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
 */
+
 #ifndef SYMBOL_H
 #define SYMBOL_H
 #include <string>

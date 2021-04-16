@@ -1,5 +1,6 @@
-// the main c++ file for the compiler
-// team chickendinner
+/*
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
+*/
 #include <iostream>
 #include <stdio.h>
 #include <vector>
@@ -16,16 +17,11 @@ int var_ct = 0;
 bool reg_only_flag = false;
 std::map<string, string> var_dict;
 std::map<string, string> reg_dict;
-//std::vector<std::set<string>> GEN_vect;
-//std::vector<std::set<string>> KILL_vect;
 
-//extern int yyparse();
+
 extern FILE* yyin;
-//extern char* yytext;
-/*
-std::map<yytokentype, std::string> typeName;
-std::string typeName[TOKEN_INT] = "INT";
-*/
+
+
 int main(int argc, char **argv)
 {
 	//printf("%s\n", typeName[TOKEN_INT]);

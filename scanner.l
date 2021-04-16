@@ -1,12 +1,15 @@
 %{
-#include <string>
-#include <vector>
-#include "headers/main.h"
-#include "parser.hpp"
-#include <stdio.h>
-#include <iostream>
+    /*
+        Acknowledgement(s): (Akshat Karani, Zixian Lai)
+    */
+    #include <string>
+    #include <vector>
+    #include "headers/main.h"
+    #include "parser.hpp"
+    #include <stdio.h>
+    #include <iostream>
 
-using namespace std;
+    using namespace std;
 %}
 
 DIGIT	[0-9]
@@ -40,7 +43,7 @@ FLOAT {yylval.str = new string(yytext); return TOKEN_FLOAT;}
 {DIGIT}+				{yylval.str = new string(yytext); return TOKEN_INTLITERAL;}
 
 {DIGIT}*"."{DIGIT}+		{yylval.str = new string(yytext); return TOKEN_FLOATLITERAL;}
-{COMMENT}               {};
+{COMMENT}               {}
 
 ":="	{return TOKEN_OP_NE;}
 "+"	{return TOKEN_OP_PLUS;}

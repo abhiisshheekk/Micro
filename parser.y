@@ -1,18 +1,22 @@
 %{
+	/*
+    	Acknowledgement(s): (Akshat Karani, Zixian Lai)
+	*/
+
 	#include <stdio.h>
 	#include <iostream>
 	#include <string>
 	#include <vector>
 	#include <utility>
 	#include "headers/main.h"
-	//#include "Symbol.h"
+
 	extern int yylex();
 	extern char* yytext();
 	extern int yyparse();
 	extern int yylineno;
 	using namespace std;
 
-//std::string * global_name = new std::string("GLOBAL");
+
 std::string global_name = "GLOBAL";
 std::string block_name = "BLOCK";
 std::string temp_name = "T";

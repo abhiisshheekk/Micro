@@ -1,6 +1,7 @@
 /*
-	The Tiny.h
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
 */
+
 #ifndef TINY_H
 #define TINY_H
 #include <string>

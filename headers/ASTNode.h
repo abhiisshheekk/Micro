@@ -1,6 +1,7 @@
 /*
-	The ASTNode.h
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
 */
+
 #ifndef ASTNODE_H
 #define ASTNODE_H
 #include <string>

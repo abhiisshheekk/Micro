@@ -1,6 +1,7 @@
 /*
-	The Scope class
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
 */
+
 #ifndef SCOPE_H
 #define SCOPE_H
 #include <string>

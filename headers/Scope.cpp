@@ -1,3 +1,7 @@
+/*
+    Acknowledgement(s): (Akshat Karani, Zixian Lai)
+*/
+
 #include "Scope.h"
 #include <iostream>
 
