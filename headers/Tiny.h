@@ -1,6 +1,7 @@
 /*
-    Acknowledgement(s): (Akshat Karani, Zixian Lai)
-*/
+ *  Acknowledgement(s): (Akshat Karani, Zixian Lai)
+ *	Documentation Acknowledgement(s): (Rupesh Kalantre) 
+ */
 
 #ifndef TINY_H
 #define TINY_H
@@ -15,21 +16,12 @@
 
 namespace std{
 	class Tiny{
-	private:
-		std::vector<std::IR_code*> IR_vector;
-		std::map<string, string> var_dict;
-		std::map<string, string> reg_dict;
-		std::map<string, string> act_record;
-		string reg_prefix;
-		int reg_counter;
-		string reg_counter_str;
-		string s;
-		size_t pos_t;
-		string temp_num;
-	public:
-		virtual ~Tiny();
-		Tiny(std::vector<std::IR_code*> IR_vector_in);
-		void genTiny();
+		private:
+			std::vector<std::IR_code*> IR_vector;	// holds 3AC code
+		public:
+			Tiny(std::vector<std::IR_code*> IR_vector_in);		// costructor for tiny object
+			virtual ~Tiny();		// destructor for tiny object
+			void genTiny();			// print assembly code
 	};
 
 }
